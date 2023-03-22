@@ -10,25 +10,22 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  buildConfiguration: 'Release'
+  tag: '$(Build.BuildId)'
 
-steps:
-- task: DotNetCoreCLI@2
-  inputs:
-    command: test
-    projects: '**/*Test/**.csproj'
-    arguments: '--configuration $(buildConfiguration)'
-
-- script: dotnet build --configuration $(buildConfiguration)
-
-- task: DotNetCoreCLI@2
-  displayName: 'dotnet publish --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)'
-  inputs:
-    command: publish
-    publishWebProjects: false
-    projects: 'src/SimpleApi/SimpleApi.csproj'
-    arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)'
-    zipAfterPublish: true
-
-- task: PublishBuildArtifacts@1
-  displayName: : 'publish artefacts'
+stages:
+- stage: Build
+  displayName: Build Image
+  jobs: 
+  - job: Build
+    displayName: Build
+    pool:
+     vmImage: 'ubuntu-latest'
+    steps:
+    - task: Docker@2
+      inputs:
+        containerRegistry: 'Marius Docker Hub'
+        repository: 'mariusdorin83/simpleapi'
+        command: 'buildAndPush'
+        Dockerfile: '**/Dockerfile'
+        tags: |
+          $(tag)
